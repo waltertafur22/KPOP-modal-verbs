@@ -1,0 +1,154 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>K-Pop English Academy</title>
+<style>
+:root{--k:#07050d;--c:#17102a;--p:#ff2e93;--v:#8a4dff;--g:#3ddc97;--r:#ff5a6e}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 15% 0,#2d0f40,var(--k) 55%) fixed;color:#fff;font:16px/1.55 'Trebuchet MS','Segoe UI',sans-serif}
+header{position:sticky;top:0;z-index:9;background:#000d;backdrop-filter:blur(8px);border-bottom:1px solid var(--p);padding:8px 12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.logo{font-weight:900;font-size:19px;color:var(--p);text-shadow:0 0 12px var(--p);margin-right:auto}#hud{font-size:14px;color:#ffd1e8}
+nav{display:flex;flex-wrap:wrap;gap:4px;width:100%}
+.b{background:#0008;color:#fff;border:1px solid var(--p);border-radius:20px;padding:7px 13px;font:inherit;font-size:14px;cursor:pointer;transition:.15s}
+.b:hover,.b.on{box-shadow:0 0 12px var(--p);background:#ff2e9333}.b:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid #fff}
+.pri{background:linear-gradient(90deg,var(--p),var(--v));border:0;font-weight:700}.b:disabled{opacity:.6;cursor:default}
+main{max-width:920px;margin:auto;padding:14px}.card{background:var(--c);border:1px solid #ffffff22;border-radius:16px;padding:16px;margin:12px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.bar{height:12px;background:#fff2;border-radius:9px;overflow:hidden;margin:6px 0}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--p),var(--v));box-shadow:0 0 10px var(--p)}
+.opt{display:block;width:100%;text-align:left;margin:7px 0;border-radius:12px}
+.ok{border-color:var(--g)!important;background:#3ddc9733!important}.no{border-color:var(--r)!important;background:#ff5a6e33!important}
+.fb{padding:10px 14px;border-radius:12px;margin:10px 0;border:1px solid}.fb.ok{border:1px solid var(--g)}.fb.no{border:1px solid var(--r)}
+input,textarea{width:100%;background:#0007;color:#fff;border:1px solid var(--v);border-radius:10px;padding:10px;font:inherit;margin:6px 0}
+.hero{text-align:center;padding:36px 8px}.hero h1{font-size:clamp(34px,9vw,70px);line-height:1;margin:0 0 10px;letter-spacing:2px;background:linear-gradient(90deg,#fff,var(--p),var(--v));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px #ff2e9399)}
+.txt{background:#0006;border-left:4px solid var(--p);padding:10px 14px;border-radius:8px}.sm{font-size:13px;color:#c9b8e6}
+.bd{display:inline-block;margin:4px;padding:6px 12px;border-radius:20px;border:1px solid var(--p)}.bd.off{opacity:.3;filter:grayscale(1)}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--p);color:#fff;padding:10px 18px;border-radius:20px;z-index:99;font-weight:700}
+h2,h3{margin:.3em 0}li{margin:3px 0}table{border-collapse:collapse;width:100%}td,th{border:1px solid #fff3;padding:6px;font-size:14px}
+</style></head><body>
+<header><span class="logo">♪ K-POP ENGLISH ACADEMY</span><span id="hud"></span><nav id="nv"></nav></header><main id="m"></main>
+<script>
+const $=s=>document.querySelector(s),M=$('#m'),SS=window.speechSynthesis;
+let S;try{S=JSON.parse(localStorage.getItem('kea'))}catch(e){}
+S=S||{xp:0,st:0,last:'',done:{},bd:[]};
+const save=()=>{try{localStorage.setItem('kea',JSON.stringify(S))}catch(e){}};
+const rnd=a=>[...a].sort(()=>Math.random()-.5),today=()=>new Date().toISOString().slice(0,10);
+const nm=s=>String(s).toLowerCase().replace(/[’‘]/g,"'").replace(/[.!?,]/g,'').replace(/\s+/g,' ').trim();
+const d=id=>S.done[id]!==undefined;
+const B=[['🌱','First Step',s=>s.xp>0],['⭐','100 XP',s=>s.xp>=100],['💎','500 XP',s=>s.xp>=500],['🔥','3-day streak',s=>s.st>=3],['📖','Reader',s=>d('rd1')&&d('rd2')],['🎧','Listener',s=>d('ls1')&&d('ls2')],['✍️','Writer',s=>d('wr1')&&d('wr2')],['🎤','Speaker',s=>d('sp1')&&d('sp2')],['👑','Boss: Module 1',s=>s.done.boss1>=70],['👑','Boss: Module 2',s=>s.done.boss2>=70],['🏆','Final Boss',s=>s.done.fin>=70]];
+function toast(t){const e=document.createElement('div');e.className='toast';e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),3000)}
+function hud(){$('#hud').textContent='Lv '+(1+(S.xp/100|0))+' · '+S.xp+' XP · 🔥 '+S.st+' day(s)'}
+function xp(n){const t=today();if(S.last!==t){const y=new Date(Date.now()-864e5).toISOString().slice(0,10);S.st=S.last===y?S.st+1:1;S.last=t}S.xp+=n;B.forEach(([e,n2,f])=>{if(!S.bd.includes(n2)&&f(S)){S.bd.push(n2);toast('🏅 New badge: '+n2)}});save();hud()}
+function say(t,p,r){if(!SS){toast('Audio is not supported in this browser');return}SS.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-GB';u.pitch=p||1;u.rate=r||.9;const v=SS.getVoices().filter(x=>x.lang.replace('_','-')==='en-GB');if(v.length)u.voice=v[Math.round((p||1)*3)%v.length];SS.speak(u)}
+/* item = [tag, question, options|null, answerIndex|[accepted], explanation, [audioText,pitch]] */
+const ITEMS=[
+['ab','Last year Mina ___ speak Korean, but she couldn’t write it.',['can','could','will be able to'],1,'Past general ability → could.'],
+['ab','Yesterday I ___ get tickets after waiting online for hours. (one specific success)',['could','was able to','can'],1,'One specific success in the past → was able to. Could is for general ability.'],
+['ab','Next year she ___ play the guitar on stage.',['can','will be able to','could'],1,'Future ability → will be able to (we never say “will can”).'],
+['ab','Make it negative: “He can dance.” → “He ___ dance.” (one word)',null,['cannot',"can't"],'can + not = cannot / can’t.'],
+['ab','“When I was six, I ___ swim already.” Write the missing words (could + verb).',null,['could swim'],'could + base verb for past general ability.'],
+['pos','“Where’s Jisoo?” “I’m not sure. She ___ be in the library.”',['might','has to','should'],0,'Not sure = possibility → might / may.'],
+['pos','Which sentence is LESS certain?',['It may snow tonight.','It might snow tonight.'],1,'Might usually shows a smaller chance than may.'],
+['pos','Which sentence is about possibility, not permission?',['May I use your phone?','He may be at the concert.'],1,'“May I…?” asks permission; “He may be…” says it is possible.'],
+['pos','Negative: “She may go to the party.” → “She ___ go to the party.” (two words)',null,['may not','might not'],'Negative: may not / might not.'],
+['pos','“I’m not sure, but we ___ win the match.” (write may or might)',null,['may','might'],'Both express possibility.'],
+['obl','At school, students ___ wear a uniform. (school rule)',['have to','mustn’t','don’t have to'],0,'External rule → have to.'],
+['obl','You ___ use your phone in the exam. It is forbidden.',['don’t have to','mustn’t','have to'],1,'mustn’t = prohibited.'],
+['obl','It’s Sunday, so I ___ wake up early. I can sleep!',['mustn’t','don’t have to','must'],1,'don’t have to = not necessary (no obligation). It is NOT the same as mustn’t.'],
+['obl','Past: “I have to study.” → “Yesterday I ___ study.” (two words)',null,['had to'],'Must has no past form: use had to.'],
+['obl','Complete the question: “___ she have to wear glasses?”',null,['does'],'Questions with have to use do / does.'],
+['adv','You look tired. You ___ go to bed early.',['should','had better not','mustn’t'],0,'should = friendly advice.'],
+['adv','Your exam is tomorrow! You ___ study now, or you’ll fail.',['had better','shouldn’t','don’t have to'],0,'had better = strong advice + a bad result if you ignore it.'],
+['adv','My phone is broken. I ___ buy a new one. (it’s necessary)',['need to','might','could'],0,'need to = necessary.'],
+['adv','Warning: “You had better ___ tell anyone.” (negative, one word)',null,['not'],'Negative: had better not + base verb.'],
+['adv','Advice: “You ___ post private photos online.” (negative, use should)',null,["shouldn't",'should not'],'shouldn’t / should not + base verb.']];
+const R1=['Mina is fifteen and she loves K-pop.','She can sing and dance, but she can’t play any instrument.','When she was ten, she could already memorise whole choreographies.','Next month there is a school talent show.','Mina might perform with her friends, but they aren’t sure yet.','If they practise every day, they will be able to win first prize.'];
+const R2=['Sofia has a big exam on Friday.','She has to study maths every evening, and her teacher says she must bring a calculator.','Her mum thinks she should sleep earlier.','Sofia often scrolls TikTok until midnight.','She had better stop, or she will be too tired to think.','She doesn’t have to go to the school choir this week.'];
+const RI=[0,[
+['rd1','TRUE or FALSE: Mina can play an instrument.',['True','False'],1,'The text says she can’t play any instrument.'],
+['rd1','Find the evidence: Mina is NOT certain about the talent show.',R1,4,'“might perform… aren’t sure yet” shows a possibility, not a plan.'],
+['rd1','Vocabulary in context: “memorise” means…',['forget','learn by heart','sell'],1,'She remembers whole choreographies.'],
+['rd1','Which sentence talks about FUTURE ability?',R1,5,'will be able to = future ability.']],[
+['rd2','TRUE or FALSE: Sofia has to go to the choir this week.',['True','False'],1,'She doesn’t have to go: it is not necessary.'],
+['rd2','Find the evidence: someone gives Sofia a strong warning.',R2,4,'had better + a bad result = strong warning.'],
+['rd2','Who gives advice with “should”?',['Her teacher','Her mum','Her friend'],1,'“Her mum thinks she should sleep earlier.”'],
+['rd2','Vocabulary in context: “scrolls” means…',['sings','moves through posts on a screen','writes'],1,'Context: TikTok until midnight.']]];
+const LS=[0,[
+['ls1','Listen. What can Hana do?',['She can dance','She can sing','She can’t dance'],0,'“I can dance really well, but I can’t sing at all.”',['Hi, I am Hana. I can dance really well, but I can’t sing at all.',1.3]],
+['ls1','Listen. Which modal expresses possibility?',['can','might','could'],1,'“I might go” = it is possible, but not decided.',['I haven’t decided yet. I might go to the concert on Saturday.',.8]],
+['ls1','Listen and complete: “When I was little, I ___ read.”',null,['could'],'could = general ability in the past.',['When I was little, I could read, but I couldn’t ride a bike.',1]],
+['ls1','Listen and complete (three words): “By next year, she ___ speak English.”',null,['will be able to'],'Future ability → will be able to.',['By next year, she will be able to speak English fluently.',1.2]]],[
+['ls2','Listen. Is it a rule or is it not necessary?',['A rule: he has to wear a helmet','Not necessary: he doesn’t have to'],0,'“You have to wear a helmet. It’s the law.”',['You have to wear a helmet on the bike. It’s the law.',.8]],
+['ls2','Listen. Which modal does the speaker use?',['should','had better','must'],1,'“had better apologise, or she will stay angry” is a warning.',['You had better apologise to her, or she will stay angry.',1.3]],
+['ls2','Listen and complete: “You ___ eat in the library.”',null,["mustn't",'must not'],'mustn’t = it is forbidden.',['You mustn’t eat in the library. It’s forbidden.',1]],
+['ls2','Listen. What advice does Dani give?',['Sleep more','Study more','Call a friend'],0,'“You should sleep more and drink some water.”',['You look exhausted. You should sleep more and drink some water.',.9]]]];
+const WR=[0,[
+['wr1','Rewrite with be able to: “I can swim.” → “I ___ swim.” (three words)',null,['am able to'],'can → am/is/are able to.'],
+['wr1','Correct the mistake: “She cans dance very well.” Write the correct sentence.',null,['she can dance very well'],'Modals never take -s.'],
+['wr1','“Yesterday I ___ finish the whole level.” (one specific success, three words)',null,['was able to'],'Specific past success → was able to.'],
+['wr1','“Perhaps she is at home.” → “She ___ at home.” (modal + be, two words)',null,['might be','may be'],'Possibility → may / might + be.']],[
+['wr2','Correct the mistake: “You must to do your homework.” Write the correct sentence.',null,['you must do your homework','you have to do your homework'],'After a modal we use the base verb (no “to”).'],
+['wr2','Rewrite: “Rules say students must arrive on time.” → “Students ___ arrive on time.” (two words)',null,['have to'],'External rule → have to.'],
+['wr2','“You should study or you will fail.” → “You ___ study or you will fail.” (two words, stronger)',null,['had better'],'had better = strong advice with a warning.'],
+['wr2','Your friend is always late. “You ___ leave home earlier.” (one word)',null,['should'],'should = advice.']]];
+const WO=[['Your friend Jina can’t sleep because she watches videos all night. Write 2 sentences of advice (use should or had better).','\\b(should|had better|need to)\\b',8,'You should turn off your phone at 10 pm. You had better sleep early, or you will be tired at school.'],
+['Write about 2 things you can do and 1 thing you might do this weekend.','\\b(can|could|might|may|be able to)\\b',8,'I can cook noodles and I can draw. I might go to a concert this weekend.'],
+['Describe 3 rules at your school using must, mustn’t, have to or don’t have to.','\\b(must|mustn.t|have to|has to|don.t have to)\\b',8,'We have to wear a uniform. We mustn’t use phones in class. We don’t have to come on Saturdays.']];
+const SP=[['Mission: Say two things you can do now and one thing you could do when you were small.','\\b(can|could)\\b',8,'I can sing and I can cook. When I was small, I could climb trees.'],
+['Your friend has an exam tomorrow and feels nervous. Give advice (should / had better).','\\b(should|had better)\\b',8,'You should sleep well. You had better review your notes tonight.'],
+['Talk about home rules: what you have to do and what you don’t have to do.','\\b(have to|has to|must|don.t have to)\\b',8,'I have to tidy my room. I don’t have to cook dinner.'],
+['Opinion: Is social media good for teenagers? Talk about possibilities (may / might).','\\b(may|might)\\b',8,'Social media may help us meet friends, but it might waste our time.'],
+['Role-play: You are a coach. Warn a student who never does homework (had better / must).','\\b(had better|must|have to|should)\\b',8,'You had better do your homework, or you will fail. You must start today.'],
+['Role-play: Your classmate wants to cheat in an exam. Warn them (should / had better / mustn’t).','\\b(should|had better|mustn.t|must not)\\b',8,'You shouldn’t cheat. You had better study instead, or the teacher might find out.']];
+const GR={ab:['Ability: can · could · be able to','<ul><li><b>Present:</b> I <b>can</b> sing. Can you dance? She <b>can’t</b> swim.</li><li><b>Past, general:</b> I <b>could</b> read at five.</li><li><b>Past, one specific success:</b> I <b>was able to</b> get tickets yesterday. (not “could”)</li><li><b>Future:</b> I’ll <b>be able to</b> drive next year.</li></ul><p class=sm>Never “cans” and never “will can”. Use the base verb after can/could.</p>'],
+pos:['Possibility: may · might','<ul><li>It <b>may</b> rain later. She <b>might</b> be late.</li><li><b>may</b> = quite possible · <b>might</b> = less certain.</li><li>Negative: may not / might not.</li><li>“May I come in?” is permission, not possibility.</li></ul>'],
+obl:['Obligation: must · have to','<ul><li><b>must</b> = strong obligation, often from the speaker: I must call my mum.</li><li><b>have to</b> = external rule: We have to wear a uniform.</li><li><b>mustn’t</b> = forbidden. <b>don’t have to</b> = not necessary.</li><li>Past: had to. Questions: Do I have to…?</li></ul>'],
+adv:['Advice & necessity: should · need to · had better','<ul><li><b>should</b> = advice: You should sleep more.</li><li><b>need to</b> = necessary: I need to charge my phone.</li><li><b>had better</b> = strong advice + a warning: You’d better stop, or you’ll fail.</li><li>Negative: shouldn’t · don’t need to · had better not.</li></ul>']};
+function run(items,o){let i=0,sc=0,lv=o.lives||0,tm;
+const fin=()=>{clearInterval(tm);if(SS)SS.cancel();const p=Math.round(100*sc/items.length);let b=0;if(p>=80)b+=20;if(o.lives&&p>=70)b+=100;if(o.bonus&&p>=60&&!d(o.id))b+=o.bonus;S.done[o.id]=Math.max(S.done[o.id]||0,p);xp(b);
+M.innerHTML=`<div class=card><h2>${o.lives&&p<70?'💔 Not yet!':'🎉 Mission complete!'}</h2><p>Score: <b>${sc}/${items.length}</b> (${p}%) · Bonus XP: +${b}</p><p>${p>=80?'Superstar! ✨':'Practise again to reach 80%.'}</p><button class="b pri" onclick="go('${o.back}')">Back</button> <button class=b id=rt>Try again</button></div>`;$('#rt').onclick=()=>run(o.re?o.re():items,o)};
+const show=()=>{if(i>=items.length||(o.lives&&!lv))return fin();const [tg,q,op,an,ex,au]=items[i];
+let h=`<div class=card><div class=bar><i style="width:${100*i/items.length}%"></i></div><p>${o.title} · ${i+1}/${items.length} ${'❤️'.repeat(lv)} <b id=tm></b></p>${o.pre||''}`;
+if(au)h+='<p><button class="b pri" id=pl>🔊 Play</button> <button class=b id=sl>🐢 Slow</button></p>';
+h+=`<h3>${q}</h3>`;
+if(op){let ord=op.map((x,j)=>[x,j]);if(op.length<5)ord=rnd(ord);h+=ord.map(([x,j])=>`<button class="b opt" data-j="${j}">${x}</button>`).join('')}else h+='<input id=in autocomplete=off placeholder="Type your answer"> <button class="b pri" id=ck>Check</button>';
+M.innerHTML=h+'<div id=fb></div></div>';
+const fin2=r=>{clearInterval(tm);if(r)sc++;else if(lv)lv--;xp(r?(o.xp||10):0);document.querySelectorAll('.opt,#ck,#in').forEach(e=>e.disabled=true);
+$('#fb').innerHTML=`<div class="fb ${r?'ok':'no'}"><b>${r?'✅ Correct! +'+(o.xp||10)+' XP':'❌ Not quite.'}</b> ${ex}${!r&&!op?'<br>Answer: <b>'+an[0]+'</b>':''}</div><button class="b pri" id=nx>Next</button>`;$('#nx').onclick=()=>{i++;show()}};
+if(op)document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{const j=+b.dataset.j;document.querySelectorAll('.opt').forEach(x=>{if(+x.dataset.j===an)x.classList.add('ok')});if(j!==an)b.classList.add('no');fin2(j===an)});
+else{const c=()=>fin2(an.some(a=>nm(a)===nm($('#in').value)));$('#ck').onclick=c;$('#in').onkeydown=e=>{if(e.key==='Enter'&&!$('#ck').disabled)c()};$('#in').focus()}
+if(au){$('#pl').onclick=()=>say(au[0],au[1]);$('#sl').onclick=()=>say(au[0],au[1],.6)}
+if(o.t){let s=o.t;$('#tm').textContent='⏱ '+s;tm=setInterval(()=>{s--;$('#tm').textContent='⏱ '+s;if(s<=0)fin2(false)},1000)}};
+show()}
+function openRun(list,o){let i=0,ok=0;const sp=o.mode==='s';
+const show=()=>{if(i>=list.length){const p=Math.round(100*ok/list.length);S.done[o.id]=Math.max(S.done[o.id]||0,p);xp(20);M.innerHTML=`<div class=card><h2>🎉 Done!</h2><p>${ok}/${list.length} answers met all the criteria. +20 XP</p><button class="b pri" onclick="go('${o.back}')">Back</button></div>`;return}
+const [q,re,min,mod]=list[i];
+M.innerHTML=`<div class=card><p>${o.title} · ${i+1}/${list.length}</p><h3>${q}</h3>${sp?'<p><button class="b pri" id=mic>🎤 Start (30 s)</button> <b id=tm></b></p><p class=sm id=mn></p>':''}<textarea id=tx rows=4 placeholder="${sp?'Your words appear here. No microphone? Type your answer.':'Write your answer here…'}"></textarea><p><button class="b pri" id=ck>Check</button></p><div id=fb></div></div>`;
+if(sp){let rc,tm;$('#mic').onclick=()=>{let s=30;clearInterval(tm);tm=setInterval(()=>{const e=$('#tm');if(!e)return clearInterval(tm);e.textContent='⏱ '+--s;if(s<=0){clearInterval(tm);if(rc)rc.stop()}},1000);const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(R){rc=new R();rc.lang='en-GB';rc.continuous=true;rc.interimResults=true;rc.onresult=e=>{$('#tx').value=[...e.results].map(r=>r[0].transcript).join(' ')};rc.onerror=()=>{$('#mn').textContent='Microphone problem: please type your answer instead.'};rc.start()}else $('#mn').textContent='Speech recognition is not supported here. Type what you would say.'}}
+$('#ck').onclick=()=>{const t=$('#tx').value,w=t.trim().split(/\s+/).filter(Boolean).length,a=new RegExp(re,'i').test(t),b=w>=min,r=a&&b;if(r)ok++;xp(r?15:5);$('#ck').disabled=true;
+$('#fb').innerHTML=`<div class="fb ${r?'ok':'no'}"><p>${a?'✅':'❌'} Uses the target modal verb</p><p>${b?'✅':'❌'} At least ${min} words (you: ${w})</p><p>Model answer: <i>${mod}</i></p><p class=sm>The automatic check looks for the modal and the length only. Compare your ideas with the model.</p></div><button class="b pri" id=nx>Next</button>`;$('#nx').onclick=()=>{i++;show()}}};
+show()}
+const gi=tags=>ITEMS.filter(x=>tags.includes(x[0])),ALL=()=>ITEMS.concat(RI[1],RI[2],LS[1],LS[2]);
+function seeded(a){let s=+today().replace(/-/g,'');return [...a].sort(()=>(s=(s*9301+49297)%233280)/233280-.5)}
+const L={'g-ab':()=>gram('ab'),'g-pos':()=>gram('pos'),'g-obl':()=>gram('obl'),'g-adv':()=>gram('adv'),rd1:()=>rd(1),rd2:()=>rd(2),ls1:()=>ls(1),ls2:()=>ls(2),wr1:()=>wr(1),wr2:()=>wr(2),sp1:()=>spk(1),sp2:()=>spk(2),boss1:()=>boss(1),boss2:()=>boss(2),fin:()=>boss(3)};
+const gram=t=>run(gi([t]),{id:'g-'+t,title:GR[t][0],back:'grammar'});
+const rd=n=>run(RI[n],{id:'rd'+n,title:'Reading Room',back:'reading',pre:'<div class=txt>'+(n==1?R1:R2).join(' ')+'</div>'});
+const ls=n=>run(LS[n],{id:'ls'+n,title:'Listening Studio',back:'listening'});
+const wr=n=>run(WR[n],{id:'wr'+n,title:'Writing Studio',back:'writing',xp:15});
+const spk=n=>openRun(n==1?[SP[0],SP[1],SP[3]]:[SP[2],SP[4],SP[5]],{id:'sp'+n,title:'Speaking Stage',mode:'s',back:'speaking'});
+function boss(n){const mk=()=>rnd(n==3?ALL():gi(n==1?['ab','pos']:['obl','adv'])).slice(0,n==3?15:10);run(mk(),{id:n==3?'fin':'boss'+n,title:n==3?'Final Boss':'Boss Battle '+n,lives:3,back:'boss',xp:15,re:mk})}
+const N=[['home','Home'],['dash','Dashboard'],['grammar','Grammar Lab'],['reading','Reading Room'],['listening','Listening Studio'],['writing','Writing Studio'],['speaking','Speaking Stage'],['games','Game Zone'],['boss','Final Boss']];
+$('#nv').innerHTML=N.map(([k,t])=>`<button class=b data-p="${k}">${t}</button>`).join('');
+document.querySelectorAll('#nv .b').forEach(b=>b.onclick=()=>go(b.dataset.p));
+const row=(id,t,sub)=>`<div class=card style="margin:6px 0"><b>${d(id)?'✅':'⬜'} ${t}</b> ${d(id)?'<span class=sm>best '+S.done[id]+'%</span>':''}<br><span class=sm>${sub||''}</span><br><button class="b pri" onclick="L['${id}']()">${d(id)?'Play again':'Start'}</button></div>`;
+const P={home(){M.innerHTML=`<div class=hero><h1>K-POP ENGLISH ACADEMY</h1><p style="font-size:19px">Train like an idol. Master modal verbs.<br>Earn XP, unlock badges, defeat the bosses.</p><button class="b pri" style="font-size:18px;padding:12px 28px" onclick="go('dash')">♪ Start my training</button></div><div class=grid><div class=card><h3>🎯 Module 1</h3>Ability and possibility: can, could, be able to, may, might.</div><div class=card><h3>📣 Module 2</h3>Obligation and advice: must, have to, should, need to, had better.</div><div class=card><h3>🎧 4 skills</h3>Read, listen, write and speak. Your progress is saved on this device.</div></div>`},
+dash(){const lv=1+(S.xp/100|0),mods=[['Module 1 · Ability & Possibility',[['g-ab','Grammar: can · could · be able to'],['g-pos','Grammar: may · might'],['rd1','Reading: Mina’s talent show'],['ls1','Listening: Hana and friends'],['wr1','Writing: rewrite & correct'],['sp1','Speaking: three missions'],['boss1','Boss Battle 1','Pass with 70% or more and 3 lives']]],['Module 2 · Obligation & Advice',[['g-obl','Grammar: must · have to'],['g-adv','Grammar: should · need to · had better'],['rd2','Reading: Sofia’s big exam'],['ls2','Listening: rules and advice'],['wr2','Writing: rewrite & correct'],['sp2','Speaking: three missions'],['boss2','Boss Battle 2','Pass with 70% or more and 3 lives']]]];
+M.innerHTML=`<div class=grid><div class=card><h3>Level ${lv}</h3><div class=bar><i style="width:${S.xp%100}%"></i></div><span class=sm>${S.xp} XP · ${100-S.xp%100} XP to the next level</span></div><div class=card><h3>🔥 Streak: ${S.st} day(s)</h3><span class=sm>Practise every day to keep it going.</span></div></div>`+mods.map(([t,ms])=>{const n=ms.filter(m=>d(m[0])).length;return `<div class=card><h2>${t}</h2><div class=bar><i style="width:${100*n/ms.length}%"></i></div><span class=sm>${n}/${ms.length} missions</span>${ms.map(m=>row(m[0],m[1],m[2])).join('')}</div>`}).join('')+`<div class=card><h2>🏅 Achievements</h2>${B.map(([e,n])=>`<span class="bd ${S.bd.includes(n)?'':'off'}">${e} ${n}</span>`).join('')}</div><div class=card><h3>My personal scores</h3>${Object.keys(S.done).filter(k=>!k.startsWith('d2')).map(k=>k+': '+S.done[k]+'%').join(' · ')||'<span class=sm>Complete a mission to see your scores.</span>'}<p><button class=b onclick="if(confirm('Delete all progress?')){localStorage.removeItem('kea');S={xp:0,st:0,last:'',done:{},bd:[]};hud();go('dash')}">Reset progress</button></p></div>`},
+grammar(){M.innerHTML=Object.keys(GR).map(t=>`<div class=card><h2>${GR[t][0]}</h2>${GR[t][1]}<button class="b pri" onclick="L['g-${t}']()">Practise (5 questions)</button> ${d('g-'+t)?'<span class=sm>best '+S.done['g-'+t]+'%</span>':''}</div>`).join('')+`<div class=card><h2>Compare</h2><table><tr><th>must</th><th>have to</th><th>mustn’t</th><th>don’t have to</th></tr><tr><td>strong, personal</td><td>external rule</td><td>forbidden</td><td>not necessary</td></tr></table></div>`},
+reading(){M.innerHTML='<h2>📖 Reading Room</h2>'+row('rd1','Mina’s talent show','Module 1 · true/false, evidence, vocabulary')+row('rd2','Sofia’s big exam','Module 2 · true/false, evidence, vocabulary')},
+listening(){M.innerHTML='<h2>🎧 Listening Studio</h2><p class=sm>British English voices from your browser. Use Play and Slow as many times as you need.</p>'+row('ls1','Hana, Ben and friends','Module 1 · choose and complete')+row('ls2','Rules and advice','Module 2 · choose and complete')+(SS?'':'<p class=no>Your browser does not support speech audio.</p>')},
+writing(){M.innerHTML='<h2>✍️ Writing Studio</h2>'+row('wr1','Rewrite & correct','Module 1 · typed answers with feedback')+row('wr2','Rewrite & correct','Module 2 · typed answers with feedback')+`<div class=card><b>Free writing</b><br><span class=sm>Advice, weekend plans and school rules.</span><br><button class="b pri" onclick="openRun(WO,{id:'wo',title:'Free writing',back:'writing'})">Start</button></div>`},
+speaking(){M.innerHTML='<h2>🎤 Speaking Stage</h2><p class=sm>Press Start, speak for 30 seconds and check. No microphone? You can type your answer.</p>'+row('sp1','Missions: can/could, advice, opinion','Module 1')+row('sp2','Missions: rules, role-plays','Module 2')},
+games(){const dk='d2'+today();M.innerHTML=`<h2>🎮 Game Zone</h2><div class=grid><div class=card><h3>🎲 Random Quiz</h3>10 random questions.<br><button class="b pri" onclick="rq()">Play</button></div><div class=card><h3>⚡ Lightning Round</h3>10 questions, 10 seconds each.<br><button class="b pri" onclick="lr()">Play</button></div><div class=card><h3>🌟 Daily Challenge</h3>5 mixed questions. +50 XP bonus once a day.<br><button class="b pri" onclick="dc()">${d(dk)?'Play again':'Play'}</button></div></div>`},
+boss(){M.innerHTML='<h2>👑 Boss Battles</h2><p class=sm>You have 3 lives. Pass with 70% or more.</p>'+row('boss1','Boss 1: Ability & Possibility','10 questions')+row('boss2','Boss 2: Obligation & Advice','10 questions')+row('fin','FINAL BOSS','15 mixed questions from every topic')}};
+const rq=()=>{const mk=()=>rnd(ITEMS).slice(0,10);run(mk(),{id:'rq',title:'Random Quiz',back:'games',re:mk})};
+const lr=()=>{const mk=()=>rnd(ITEMS.filter(x=>x[2])).slice(0,10);run(mk(),{id:'lr',title:'Lightning Round',back:'games',t:10,xp:12,re:mk})};
+const dc=()=>run(seeded(ITEMS).slice(0,5),{id:'d2'+today(),title:'Daily Challenge',back:'games',bonus:50});
+function go(p){if(SS)SS.cancel();P[p]();document.querySelectorAll('#nv .b').forEach(b=>b.classList.toggle('on',b.dataset.p===p));window.scrollTo(0,0)}
+hud();go('home');
+</script></body></html>
